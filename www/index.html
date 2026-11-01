@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteS26 - Galaxy S26 Note App Prototype</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        oneui: {
+                            blue: '#2c6ee8',
+                            bg: '#f3f4f6',
+                            card: '#ffffff',
+                            darkBg: '#121212',
+                            darkCard: '#1e1e1e',
+                            accent: '#3b82f6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                        gothic: ['Nanum Gothic', 'sans-serif'],
+                        myeongjo: ['Nanum Myeongjo', 'serif'],
+                        pen: ['Nanum Pen Script', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom font classes */
+        .font-sans-kr { font-family: 'Noto Sans KR', sans-serif; }
+        .font-nanum-gothic { font-family: 'Nanum Gothic', sans-serif; }
+        .font-nanum-myeongjo { font-family: 'Nanum Myeongjo', serif; }
+        .font-nanum-pen { font-family: 'Nanum Pen Script', cursive; font-size: 1.25rem; }
+
+        /* Custom scrollbar for mobile feel */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+        }
+
+        /* Line clamping utilities */
+        .clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .clamp-none { display: block; overflow: visible; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-800 dark:text-gray-100 font-sans min-h-screen flex items-center justify-center p-2 sm:p-6 transition-colors duration-200">
+
+    <!-- Mobile Frame Simulation Container -->
+    <div class="w-full max-w-md h-[92vh] max-h-[900px] bg-gray-100 dark:bg-oneui-darkBg rounded-[40px] border-[8px] border-gray-800 shadow-2xl flex flex-col overflow-hidden relative border-opacity-90">
+        
+        <!-- Status Bar -->
+        <div class="pt-3 px-6 pb-2 flex justify-between items-center text-xs text-gray-600 dark:text-gray-400 select-none bg-gray-100 dark:bg-oneui-darkBg z-10">
+            <span class="font-semibold">10:12</span>
+            <div class="w-20 h-4 bg-black rounded-full flex items-center justify-center">
+                <div class="w-2 h-2 rounded-full bg-blue-900/40"></div>
+            </div>
+            <div class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-battery-full text-sm"></i>
+            </div>
+        </div>
+
+        <!-- App Header (One UI Style Collapsible Title) -->
+        <header class="px-5 pt-2 pb-3 bg-gray-100 dark:bg-oneui-darkBg z-10">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>NoteS26</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-medium">S26 Edition</span>
+                    </h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5" id="totalNoteCount">전체 메모 0개</p>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <!-- Google Cloud Sync Button -->
+                    <button id="openCloudBtn" title="구글 드라이브 백업/복원" class="w-9 h-9 rounded-full bg-white dark:bg-oneui-darkCard shadow-sm flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition">
+                        <i class="fa-brands fa-google-drive text-base"></i>
+                    </button>
+                    <!-- Settings Toggle -->
+                    <button id="openSettingsBtn" title="보기 및 폰트 설정" class="w-9 h-9 rounded-full bg-white dark:bg-oneui-darkCard shadow-sm flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition">
+                        <i class="fa-solid fa-sliders text-base"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mt-3 relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <input type="text" id="searchInput" placeholder="메모 검색 (제목 및 내용)..." class="w-full pl-9 pr-8 py-2 text-sm bg-white dark:bg-oneui-darkCard border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition">
+                <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <!-- View Tabs (전체 / 일별 / 월별 / 년별) -->
+            <div class="flex items-center justify-between mt-3 bg-gray-200/70 dark:bg-gray-800/60 p-1 rounded-xl text-xs font-medium">
+                <button data-view="all" class="view-tab flex-1 py-1.5 rounded-lg text-center transition text-gray-600 dark:text-gray-400">전체</button>
+                <button data-view="daily" class="view-tab flex-1 py-1.5 rounded-lg text-center transition text-gray-600 dark:text-gray-400">일별</button>
+                <button data-view="monthly" class="view-tab flex-1 py-1.5 rounded-lg text-center transition text-gray-600 dark:text-gray-400">월별</button>
+                <button data-view="yearly" class="view-tab flex-1 py-1.5 rounded-lg text-center transition text-gray-600 dark:text-gray-400">년별</button>
+            </div>
+
+            <!-- Tag Chips -->
+            <div class="flex items-center space-x-1.5 mt-2.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+                <button data-tag="all" class="tag-chip px-3 py-1 rounded-full border border-blue-500 bg-blue-500 text-white font-medium whitespace-nowrap">#전체</button>
+                <button data-tag="업무" class="tag-chip px-3 py-1 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-oneui-darkCard text-gray-600 dark:text-gray-300 whitespace-nowrap">#업무</button>
+                <button data-tag="일기" class="tag-chip px-3 py-1 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-oneui-darkCard text-gray-600 dark:text-gray-300 whitespace-nowrap">#일기</button>
+                <button data-tag="아이디어" class="tag-chip px-3 py-1 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-oneui-darkCard text-gray-600 dark:text-gray-300 whitespace-nowrap">#아이디어</button>
+                <button data-tag="중요" class="tag-chip px-3 py-1 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-oneui-darkCard text-gray-600 dark:text-gray-300 whitespace-nowrap">#중요</button>
+            </div>
+        </header>
+
+        <!-- Main Content Area: Memo List -->
+        <main id="memoListContainer" class="flex-1 overflow-y-auto px-4 py-2 space-y-4">
+            <!-- Dynamic Memos Inserted Here -->
+        </main>
+
+        <!-- Bottom Actions (One UI Floating Action Button Zone) -->
+        <div class="p-4 bg-gradient-to-t from-gray-100 dark:from-oneui-darkBg via-gray-100/90 dark:via-oneui-darkBg/90 to-transparent flex items-center justify-between z-10 pointer-events-none">
+            <div class="flex space-x-2 pointer-events-auto">
+                <button id="toggleThemeBtn" class="w-10 h-10 rounded-full bg-white dark:bg-oneui-darkCard border border-gray-200 dark:border-gray-800 shadow-md flex items-center justify-center text-gray-700 dark:text-yellow-400">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+            </div>
+            
+            <!-- Floating New Memo Button -->
+            <button id="newMemoBtn" class="pointer-events-auto px-5 py-3 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-medium shadow-lg flex items-center space-x-2 transition">
+                <i class="fa-solid fa-plus text-base"></i>
+                <span class="text-sm">새 메모</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 1. MEMO EDITOR MODAL -->
+    <div id="editorModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="w-full max-w-md bg-white dark:bg-oneui-darkCard rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-gray-200 dark:border-gray-800 transform translate-y-full sm:translate-y-0 transition-transform duration-200 max-h-[90vh] flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+                <button id="closeEditorBtn" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <div class="flex items-center space-x-3 text-sm">
+                    <!-- Pin Toggle -->
+                    <button id="editPinBtn" class="text-gray-400 hover:text-amber-500 transition" title="상단 고정">
+                        <i class="fa-solid fa-thumbtack text-base"></i>
+                    </button>
+                    <!-- Lock Toggle -->
+                    <button id="editLockBtn" class="text-gray-400 hover:text-red-500 transition" title="메모 잠금 (생체인증)">
+                        <i class="fa-solid fa-lock text-base"></i>
+                    </button>
+                    <span id="autoSaveBadge" class="text-xs text-emerald-500 font-medium flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> 저장됨
+                    </span>
+                </div>
+            </div>
+
+            <!-- Form Content -->
+            <div class="flex-1 overflow-y-auto py-3 space-y-3">
+                <!-- Title Input -->
+                <input type="text" id="editorTitle" placeholder="제목을 입력하세요..." class="w-full text-lg font-bold bg-transparent border-b border-gray-200 dark:border-gray-800 pb-2 focus:outline-none text-gray-900 dark:text-white">
+                
+                <!-- Memo Options Toolbar -->
+                <div class="flex items-center justify-between text-xs py-1 text-gray-500">
+                    <!-- Tag Selection -->
+                    <select id="editorTag" class="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg px-2.5 py-1 text-gray-700 dark:text-gray-300 focus:outline-none">
+                        <option value="일반">#일반</option>
+                        <option value="업무">#업무</option>
+                        <option value="일기">#일기</option>
+                        <option value="아이디어">#아이디어</option>
+                        <option value="중요">#중요</option>
+                    </select>
+
+                    <!-- Individual Font Option -->
+                    <select id="editorFont" class="bg-gray-100 dark:bg-gray-800 border-0 rounded-lg px-2.5 py-1 text-gray-700 dark:text-gray-300 focus:outline-none">
+                        <option value="font-sans-kr">기본 폰트</option>
+                        <option value="font-nanum-gothic">나눔고딕</option>
+                        <option value="font-nanum-myeongjo">나눔명조</option>
+                        <option value="font-nanum-pen">감성 펜글씨</option>
+                    </select>
+
+                    <!-- Card Color Selector -->
+                    <div class="flex items-center space-x-1" id="colorPicker">
+                        <button data-color="default" class="w-4 h-4 rounded-full bg-gray-300 dark:bg-gray-600 ring-2 ring-offset-1 ring-blue-500"></button>
+                        <button data-color="yellow" class="w-4 h-4 rounded-full bg-amber-200 dark:bg-amber-900/60"></button>
+                        <button data-color="green" class="w-4 h-4 rounded-full bg-emerald-200 dark:bg-emerald-900/60"></button>
+                        <button data-color="blue" class="w-4 h-4 rounded-full bg-sky-200 dark:bg-sky-900/60"></button>
+                    </div>
+                </div>
+
+                <!-- Main Textarea -->
+                <textarea id="editorContent" placeholder="메모 내용을 작성하세요..." class="w-full h-44 bg-transparent border-0 focus:outline-none resize-none text-sm text-gray-800 dark:text-gray-200 leading-relaxed" spellcheck="false"></textarea>
+
+                <!-- Attached Media Preview Bar -->
+                <div id="mediaAttachmentArea" class="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <p class="text-xs font-semibold text-gray-400">첨부 파일</p>
+                    <div class="flex items-center space-x-2 text-xs" id="attachmentBadgeContainer">
+                        <span class="text-gray-400 italic">첨부된 파일이 없습니다.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Tools (Simulators) & Save Button -->
+            <div class="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3 text-gray-500">
+                    <button id="addPhotoSimBtn" class="hover:text-blue-500 transition" title="사진 첨부 시뮬레이션">
+                        <i class="fa-regular fa-image text-lg"></i>
+                    </button>
+                    <button id="addAudioSimBtn" class="hover:text-blue-500 transition" title="음성 녹음 첨부 시뮬레이션">
+                        <i class="fa-solid fa-microphone text-lg"></i>
+                    </button>
+                    <span class="text-xs text-gray-400" id="charCount">0 자</span>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <button id="deleteMemoBtn" class="px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition font-medium hidden">삭제</button>
+                    <button id="saveMemoBtn" class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition">완료</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. DISPLAY & FONT SETTINGS MODAL -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 p-4">
+        <div class="w-full max-w-sm bg-white dark:bg-oneui-darkCard rounded-3xl p-5 shadow-2xl border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-800">
+                <h3 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-blue-500"></i> 보기 및 가독성 설정
+                </h3>
+                <button id="closeSettingsBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="py-4 space-y-4">
+                <!-- Line Preview Limit -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">리스트 본문 미리보기 줄 수</label>
+                    <div class="grid grid-cols-4 gap-2 text-xs">
+                        <button data-lines="1" class="line-opt-btn py-2 rounded-xl border border-gray-200 dark:border-gray-700 font-medium">1줄</button>
+                        <button data-lines="2" class="line-opt-btn py-2 rounded-xl border border-gray-200 dark:border-gray-700 font-medium">2줄</button>
+                        <button data-lines="3" class="line-opt-btn py-2 rounded-xl border border-gray-200 dark:border-gray-700 font-medium">3줄</button>
+                        <button data-lines="all" class="line-opt-btn py-2 rounded-xl border border-gray-200 dark:border-gray-700 font-medium">전체</button>
+                    </div>
+                </div>
+
+                <!-- Global Font Family Selection -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">앱 기본 폰트 선택</label>
+                    <select id="globalFontSelect" class="w-full p-2.5 text-xs bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none text-gray-800 dark:text-gray-200">
+                        <option value="font-sans-kr">기본 (One UI Noto Sans)</option>
+                        <option value="font-nanum-gothic">나눔고딕 (깔끔한 정돈)</option>
+                        <option value="font-nanum-myeongjo">나눔명조 (도서/서정적)</option>
+                        <option value="font-nanum-pen">감성 펜글씨 (손글씨 느낌)</option>
+                    </select>
+                </div>
+
+                <!-- Quick Action Stats -->
+                <div class="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-2xl text-xs text-blue-700 dark:text-blue-300">
+                    <div class="flex justify-between items-center">
+                        <span>현재 설정 상태</span>
+                        <span id="currentSettingsSummary" class="font-bold">2줄 미리보기</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="applySettingsBtn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition">적용 완료</button>
+        </div>
+    </div>
+
+    <!-- 3. GOOGLE DRIVE BACKUP & RESTORE MODAL -->
+    <div id="cloudModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 p-4">
+        <div class="w-full max-w-sm bg-white dark:bg-oneui-darkCard rounded-3xl p-5 shadow-2xl border border-gray-200 dark:border-gray-800">
+            <div class="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-800">
+                <h3 class="font-bold text-base text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-brands fa-google-drive text-emerald-500 text-lg"></i> 구글 드라이브 동기화
+                </h3>
+                <button id="closeCloudBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="py-4 space-y-4">
+                <!-- Account Status -->
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">G</div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-800 dark:text-gray-200" id="userEmail">user@gmail.com</p>
+                            <p class="text-[10px] text-gray-400">마지막 백업: <span id="lastBackupTime">없음</span></p>
+                        </div>
+                    </div>
+                    <button id="toggleAuthBtn" class="text-xs px-2.5 py-1 bg-gray-200 dark:bg-gray-700 rounded-lg font-medium text-gray-700 dark:text-gray-300">연동 해제</button>
+                </div>
+
+                <!-- Backup & Restore Actions -->
+                <div class="space-y-2">
+                    <button id="manualBackupBtn" class="w-full p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-md">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>지금 백업하기 (Google Drive)</span>
+                    </button>
+                    <button id="manualRestoreBtn" class="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-md">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                        <span>새 폰 복원 (데이터 불러오기)</span>
+                    </button>
+                </div>
+
+                <!-- Auto Backup Indicator -->
+                <div class="flex items-center justify-between px-2 pt-1">
+                    <span class="text-xs text-gray-600 dark:text-gray-400">Wi-Fi 연결 시 자동 백업</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="autoBackupToggle" class="sr-only peer" checked>
+                        <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BIOMETRIC LOCK SIMULATION MODAL -->
+    <div id="lockModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 p-4">
+        <div class="w-full max-w-xs bg-white dark:bg-oneui-darkCard rounded-3xl p-6 text-center shadow-2xl border border-gray-200 dark:border-gray-800">
+            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-fingerprint"></i>
+            </div>
+            <h4 class="font-bold text-gray-900 dark:text-white mb-1">비밀 메모 잠금</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-5">갤럭시 생체 지문 또는 Face ID로 인증하세요.</p>
+            <div class="space-y-2">
+                <button id="unlockSimBtn" class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition">지문 인증하기</button>
+                <button id="cancelUnlockBtn" class="w-full py-2.5 text-gray-500 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast" class="fixed bottom-16 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 text-white dark:text-gray-900 px-4 py-2 rounded-full text-xs font-medium shadow-xl opacity-0 pointer-events-none transition-all duration-300 z-50 flex items-center space-x-2">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-blue-400 dark:text-blue-600"></i>
+        <span id="toastMsg">알림 메시지</span>
+    </div>
+
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
+    <script>
+        // Default Mock Data for NoteS26
+        const DEFAULT_MEMOS = [
+            {
+                id: 'memo-1',
+                title: '갤럭시 S26 개발 구상 및 아이디어',
+                content: 'One UI 9 최신 디자인 표준에 맞추어 하단 중심의 UI를 배치할 것. 구글 드라이브 REST API 백업 기능을 활용해서 기기 변경 시 데이터가 1초만에 유실없이 복원되는 구조 구축.',
+                updatedAt: '2026-11-01T09:30:00.000Z',
+                isPinned: true,
+                isLocked: false,
+                tag: '아이디어',
+                fontFamily: 'font-sans-kr',
+                color: 'blue',
+                hasImage: true,
+                hasAudio: false
+            },
+            {
+                id: 'memo-2',
+                title: '주간 장보기 리스트',
+                content: '1. 유기농 우유 2팩\n2. 계란 30구\n3. 호밀빵 및 자몽\n4. 커피 원두 (에티오피아 예가체프)',
+                updatedAt: '2026-11-01T08:15:00.000Z',
+                isPinned: false,
+                isLocked: false,
+                tag: '일반',
+                fontFamily: 'font-nanum-gothic',
+                color: 'yellow',
+                hasImage: false,
+                hasAudio: false
+            },
+            {
+                id: 'memo-3',
+                title: '가을 산책 일기',
+                content: '오늘 공원에서 단풍이 너무 예쁘게 들었다. 벤치에 앉아서 커피 한 잔 마시며 펜글씨 폰트로 메모를 적어보았다. 바람도 선선해서 기분이 매우 상쾌했다.',
+                updatedAt: '2026-10-28T16:20:00.000Z',
+                isPinned: false,
+                isLocked: false,
+                tag: '일기',
+                fontFamily: 'font-nanum-pen',
+                color: 'green',
+                hasImage: true,
+                hasAudio: true
+            },
+            {
+                id: 'memo-4',
+                title: '비밀 금융 계좌 메모',
+                content: '주거래 은행 계좌 및 보안카드 관리 번호. 이 메모는 비밀 메모로 생체 지문 인증을 통과해야 내용 열람이 가능하도록 처리됨.',
+                updatedAt: '2026-09-15T11:00:00.000Z',
+                isPinned: true,
+                isLocked: true,
+                tag: '중요',
+                fontFamily: 'font-sans-kr',
+                color: 'default',
+                hasImage: false,
+                hasAudio: false
+            },
+            {
+                id: 'memo-5',
+                title: 'Q4 분기 프로젝트 백로그',
+                content: '1. UI/UX 와이어프레임 확정\n2. Room 데이터베이스 마이그레이션 스키마 갱신\n3. 테스팅 및 오류 수정',
+                updatedAt: '2025-12-10T14:00:00.000Z',
+                isPinned: false,
+                isLocked: false,
+                tag: '업무',
+                fontFamily: 'font-nanum-myeongjo',
+                color: 'default',
+                hasImage: false,
+                hasAudio: false
+            }
+        ];
+
+        // APP STATE
+        let memos = [];
+        let currentView = 'all'; // 'all', 'daily', 'monthly', 'yearly'
+        let currentTag = 'all';
+        let searchQuery = '';
+        let lineLimit = '2'; // '1', '2', '3', 'all'
+        let globalFont = 'font-sans-kr';
+        let isAuth = true;
+        let lastBackup = '2026-11-01 10:00';
+        let currentEditingId = null;
+        let pendingUnlockId = null;
+
+        // Temporary Form Media Simulator States
+        let tempHasImage = false;
+        let tempHasAudio = false;
+
+        // DOM ELEMENTS
+        const memoListContainer = document.getElementById('memoListContainer');
+        const searchInput = document.getElementById('searchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const totalNoteCount = document.getElementById('totalNoteCount');
+
+        // Init App
+        window.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            setupEventListeners();
+            renderMemos();
+            updateSettingsUI();
+        });
+
+        // LOAD FROM LOCALSTORAGE
+        function loadState() {
+            const savedMemos = localStorage.getItem('notes26_memos');
+            if (savedMemos) {
+                try { memos = JSON.parse(savedMemos); } catch (e) { memos = DEFAULT_MEMOS; }
+            } else {
+                memos = DEFAULT_MEMOS;
+                saveMemosToStorage();
+            }
+
+            lineLimit = localStorage.getItem('notes26_lineLimit') || '2';
+            globalFont = localStorage.getItem('notes26_globalFont') || 'font-sans-kr';
+            lastBackup = localStorage.getItem('notes26_lastBackup') || '2026-11-01 10:00';
+            
+            // Apply font to app wrapper
+            document.body.className = document.body.className.replace(/font-\S+/g, '') + ' ' + globalFont;
+        }
+
+        function saveMemosToStorage() {
+            localStorage.setItem('notes26_memos', JSON.stringify(memos));
+        }
+
+        // RENDER MEMO LIST
+        function renderMemos() {
+            memoListContainer.innerHTML = '';
+
+            // Filter by Tag & Search
+            let filtered = memos.filter(m => {
+                const matchesTag = (currentTag === 'all') || (m.tag === currentTag);
+                const q = searchQuery.toLowerCase();
+                const matchesSearch = !q || m.title.toLowerCase().includes(q) || m.content.toLowerCase().includes(q);
+                return matchesTag && matchesSearch;
+            });
+
+            totalNoteCount.textContent = `전체 메모 ${filtered.length}개`;
+
+            if (filtered.length === 0) {
+                memoListContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-gray-400">
+                        <i class="fa-regular fa-folder-open text-4xl mb-3 opacity-50"></i>
+                        <p class="text-xs">조건에 맞는 메모가 없습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Separate Pinned and Unpinned
+            const pinned = filtered.filter(m => m.isPinned);
+            const unpinned = filtered.filter(m => !m.isPinned);
+
+            // Render Pinned Section first if available
+            if (pinned.length > 0 && searchQuery === '') {
+                const pinHeader = document.createElement('div');
+                pinHeader.className = 'text-xs font-bold text-amber-500 dark:text-amber-400 flex items-center gap-1.5 pt-1 px-1';
+                pinHeader.innerHTML = `<i class="fa-solid fa-thumbtack text-xs"></i> <span>고정된 메모 (${pinned.length})</span>`;
+                memoListContainer.appendChild(pinHeader);
+
+                pinned.forEach(memo => memoListContainer.appendChild(createMemoCard(memo)));
+            }
+
+            // Render Grouped or List
+            if (currentView === 'all') {
+                if (unpinned.length > 0 && pinned.length > 0 && searchQuery === '') {
+                    const allHeader = document.createElement('div');
+                    allHeader.className = 'text-xs font-bold text-gray-400 pt-3 px-1';
+                    allHeader.textContent = `일반 메모 (${unpinned.length})`;
+                    memoListContainer.appendChild(allHeader);
+                }
+                const listToRender = (searchQuery !== '') ? filtered : unpinned;
+                listToRender.forEach(memo => memoListContainer.appendChild(createMemoCard(memo)));
+            } else {
+                // Grouping Logic (Daily, Monthly, Yearly)
+                const listToGroup = (searchQuery !== '') ? filtered : unpinned;
+                const groups = groupMemos(listToGroup, currentView);
+
+                Object.keys(groups).forEach(groupKey => {
+                    const groupHeader = document.createElement('div');
+                    groupHeader.className = 'text-xs font-bold text-blue-600 dark:text-blue-400 pt-3 pb-1 px-1 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center';
+                    groupHeader.innerHTML = `
+                        <span><i class="fa-regular fa-calendar-check mr-1.5"></i>${groupKey}</span>
+                        <span class="text-[10px] bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-full">${groups[groupKey].length}</span>
+                    `;
+                    memoListContainer.appendChild(groupHeader);
+
+                    groups[groupKey].forEach(memo => memoListContainer.appendChild(createMemoCard(memo)));
+                });
+            }
+        }
+
+        // CREATE MEMO CARD ELEMENT
+        function createMemoCard(memo) {
+            const card = document.createElement('div');
+
+            // Background Card Color Themes
+            let colorClasses = 'bg-white dark:bg-oneui-darkCard border-gray-200 dark:border-gray-800';
+            if (memo.color === 'yellow') colorClasses = 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50';
+            if (memo.color === 'green') colorClasses = 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50';
+            if (memo.color === 'blue') colorClasses = 'bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-900/50';
+
+            // Font override per memo or default
+            const fontClass = memo.fontFamily || globalFont;
+
+            // Clamp class for line limit
+            let clampClass = 'clamp-2';
+            if (lineLimit === '1') clampClass = 'clamp-1';
+            if (lineLimit === '3') clampClass = 'clamp-3';
+            if (lineLimit === 'all') clampClass = 'clamp-none';
+
+            card.className = `p-4 rounded-2xl border shadow-sm transition transform hover:-translate-y-0.5 ${colorClasses} ${fontClass} cursor-pointer relative overflow-hidden group`;
+
+            const dateStr = formatDate(memo.updatedAt);
+
+            if (memo.isLocked) {
+                // Locked State Card
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
+                            <i class="fa-solid fa-lock text-red-500"></i>
+                            <span class="text-xs font-semibold">잠긴 메모 (생체 인증 필요)</span>
+                        </div>
+                        <span class="text-[10px] text-gray-400">${dateStr}</span>
+                    </div>
+                `;
+                card.onclick = () => openLockModal(memo.id);
+            } else {
+                // Normal Card
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <h3 class="font-bold text-sm text-gray-900 dark:text-white truncate flex-1">${escapeHtml(memo.title || '제목 없음')}</h3>
+                        <div class="flex items-center space-x-1 shrink-0">
+                            ${memo.isPinned ? '<i class="fa-solid fa-thumbtack text-xs text-amber-500"></i>' : ''}
+                            <span class="text-[10px] px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">#${memo.tag}</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed mb-3 ${clampClass}">
+                        ${escapeHtml(memo.content || '내용이 없습니다.')}
+                    </p>
+
+                    <div class="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-100 dark:border-gray-800/60">
+                        <div class="flex items-center space-x-2">
+                            <span>${dateStr}</span>
+                            ${memo.hasImage ? '<i class="fa-regular fa-image text-blue-500" title="이미지 포함"></i>' : ''}
+                            ${memo.hasAudio ? '<i class="fa-solid fa-microphone text-emerald-500" title="음성 포함"></i>' : ''}
+                        </div>
+                        
+                        <div class="opacity-0 group-hover:opacity-100 transition flex items-center space-x-2">
+                            <button onclick="event.stopPropagation(); togglePin('${memo.id}')" class="hover:text-amber-500" title="핀 고정">
+                                <i class="fa-solid fa-thumbtack"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteMemo('${memo.id}')" class="hover:text-red-500" title="삭제">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => openEditor(memo.id);
+            }
+
+            return card;
+        }
+
+        // GROUPING LOGIC (Daily, Monthly, Yearly)
+        function groupMemos(memosList, type) {
+            const groups = {};
+            memosList.forEach(memo => {
+                const d = new Date(memo.updatedAt);
+                let key = '';
+                if (type === 'daily') {
+                    const today = new Date().toDateString();
+                    if (d.toDateString() === today) key = '오늘';
+                    else key = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+                } else if (type === 'monthly') {
+                    key = `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
+                } else if (type === 'yearly') {
+                    key = `${d.getFullYear()}년`;
+                }
+
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(memo);
+            });
+            return groups;
+        }
+
+        // DATE FORMATTER
+        function formatDate(isoStr) {
+            const d = new Date(isoStr);
+            const now = new Date();
+            if (d.toDateString() === now.toDateString()) {
+                return `오늘 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            }
+            return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+        }
+
+        // EVENT LISTENERS SETUP
+        function setupEventListeners() {
+            // Dark Mode Toggle
+            document.getElementById('toggleThemeBtn').onclick = () => {
+                document.documentElement.classList.toggle('dark');
+                showToast('테마가 변경되었습니다.');
+            };
+
+            // Search
+            searchInput.oninput = (e) => {
+                searchQuery = e.target.value;
+                clearSearchBtn.classList.toggle('hidden', !searchQuery);
+                renderMemos();
+            };
+            clearSearchBtn.onclick = () => {
+                searchInput.value = '';
+                searchQuery = '';
+                clearSearchBtn.classList.add('hidden');
+                renderMemos();
+            };
+
+            // View Tabs
+            document.querySelectorAll('.view-tab').forEach(tab => {
+                tab.onclick = () => {
+                    document.querySelectorAll('.view-tab').forEach(t => {
+                        t.classList.remove('bg-white', 'dark:bg-oneui-darkCard', 'text-blue-600', 'dark:text-blue-400', 'shadow-sm', 'font-bold');
+                        t.classList.add('text-gray-600', 'dark:text-gray-400');
+                    });
+                    tab.classList.add('bg-white', 'dark:bg-oneui-darkCard', 'text-blue-600', 'dark:text-blue-400', 'shadow-sm', 'font-bold');
+                    tab.classList.remove('text-gray-600', 'dark:text-gray-400');
+                    currentView = tab.dataset.view;
+                    renderMemos();
+                };
+            });
+            document.querySelector('.view-tab[data-view="all"]').click();
+
+            // Tag Filter Chips
+            document.querySelectorAll('.tag-chip').forEach(chip => {
+                chip.onclick = () => {
+                    document.querySelectorAll('.tag-chip').forEach(c => {
+                        c.className = 'tag-chip px-3 py-1 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-oneui-darkCard text-gray-600 dark:text-gray-300 whitespace-nowrap';
+                    });
+                    chip.className = 'tag-chip px-3 py-1 rounded-full border border-blue-500 bg-blue-500 text-white font-medium whitespace-nowrap';
+                    currentTag = chip.dataset.tag;
+                    renderMemos();
+                };
+            });
+
+            // Editor Open / Close
+            document.getElementById('newMemoBtn').onclick = () => openEditor(null);
+            document.getElementById('closeEditorBtn').onclick = closeEditor;
+
+            // Save Memo
+            document.getElementById('saveMemoBtn').onclick = saveEditorMemo;
+            document.getElementById('deleteMemoBtn').onclick = () => {
+                if (currentEditingId) {
+                    deleteMemo(currentEditingId);
+                    closeEditor();
+                }
+            };
+
+            // Live Char Counter & Auto-save simulation
+            const contentInput = document.getElementById('editorContent');
+            contentInput.oninput = () => {
+                document.getElementById('charCount').textContent = `${contentInput.value.length} 자`;
+            };
+
+            // Media Simulators
+            document.getElementById('addPhotoSimBtn').onclick = () => {
+                tempHasImage = !tempHasImage;
+                updateAttachmentBadges();
+                showToast(tempHasImage ? '사진 파일이 첨부되었습니다.' : '사진 첨부가 취소되었습니다.');
+            };
+            document.getElementById('addAudioSimBtn').onclick = () => {
+                tempHasAudio = !tempHasAudio;
+                updateAttachmentBadges();
+                showToast(tempHasAudio ? '음성 녹음이 첨부되었습니다.' : '음성 첨부가 취소되었습니다.');
+            };
+
+            // Settings Modal
+            document.getElementById('openSettingsBtn').onclick = openSettingsModal;
+            document.getElementById('closeSettingsBtn').onclick = closeSettingsModal;
+            document.getElementById('applySettingsBtn').onclick = applySettings;
+
+            document.querySelectorAll('.line-opt-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.line-opt-btn').forEach(b => b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600'));
+                    btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                    btn.dataset.selected = 'true';
+                };
+            });
+
+            // Cloud Modal
+            document.getElementById('openCloudBtn').onclick = openCloudModal;
+            document.getElementById('closeCloudBtn').onclick = closeCloudModal;
+            document.getElementById('manualBackupBtn').onclick = runManualBackup;
+            document.getElementById('manualRestoreBtn').onclick = runManualRestore;
+            document.getElementById('toggleAuthBtn').onclick = toggleAuthStatus;
+
+            // Unlock Modal
+            document.getElementById('unlockSimBtn').onclick = confirmUnlock;
+            document.getElementById('cancelUnlockBtn').onclick = closeLockModal;
+
+            // Editor Pin & Lock Toggles inside Modal
+            const editPinBtn = document.getElementById('editPinBtn');
+            editPinBtn.onclick = () => {
+                editPinBtn.classList.toggle('text-amber-500');
+                editPinBtn.classList.toggle('text-gray-400');
+            };
+            const editLockBtn = document.getElementById('editLockBtn');
+            editLockBtn.onclick = () => {
+                editLockBtn.classList.toggle('text-red-500');
+                editLockBtn.classList.toggle('text-gray-400');
+            };
+
+            // Color Selector Buttons
+            document.querySelectorAll('#colorPicker button').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('#colorPicker button').forEach(b => b.classList.remove('ring-2', 'ring-offset-1', 'ring-blue-500'));
+                    btn.classList.add('ring-2', 'ring-offset-1', 'ring-blue-500');
+                    btn.dataset.selected = 'true';
+                };
+            });
+        }
+
+        // EDITOR LOGIC
+        function openEditor(memoId) {
+            currentEditingId = memoId;
+            const modal = document.getElementById('editorModal');
+            const inner = modal.children[0];
+
+            if (memoId) {
+                // Edit existing
+                const memo = memos.find(m => m.id === memoId);
+                if (!memo) return;
+                document.getElementById('editorTitle').value = memo.title;
+                document.getElementById('editorContent').value = memo.content;
+                document.getElementById('editorTag').value = memo.tag || '일반';
+                document.getElementById('editorFont').value = memo.fontFamily || 'font-sans-kr';
+                document.getElementById('deleteMemoBtn').classList.remove('hidden');
+
+                // Color
+                selectColorButton(memo.color || 'default');
+
+                // Pin & Lock Toggles
+                setToggleState(document.getElementById('editPinBtn'), memo.isPinned, 'text-amber-500');
+                setToggleState(document.getElementById('editLockBtn'), memo.isLocked, 'text-red-500');
+
+                tempHasImage = !!memo.hasImage;
+                tempHasAudio = !!memo.hasAudio;
+            } else {
+                // New Memo
+                document.getElementById('editorTitle').value = '';
+                document.getElementById('editorContent').value = '';
+                document.getElementById('editorTag').value = '일반';
+                document.getElementById('editorFont').value = globalFont;
+                document.getElementById('deleteMemoBtn').classList.add('hidden');
+                selectColorButton('default');
+
+                setToggleState(document.getElementById('editPinBtn'), false, 'text-amber-500');
+                setToggleState(document.getElementById('editLockBtn'), false, 'text-red-500');
+
+                tempHasImage = false;
+                tempHasAudio = false;
+            }
+
+            document.getElementById('charCount').textContent = `${document.getElementById('editorContent').value.length} 자`;
+            updateAttachmentBadges();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                inner.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeEditor() {
+            const modal = document.getElementById('editorModal');
+            const inner = modal.children[0];
+            inner.classList.add('translate-y-full');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function saveEditorMemo() {
+            const title = document.getElementById('editorTitle').value.trim();
+            const content = document.getElementById('editorContent').value.trim();
+            const tag = document.getElementById('editorTag').value;
+            const fontFamily = document.getElementById('editorFont').value;
+            const isPinned = document.getElementById('editPinBtn').classList.contains('text-amber-500');
+            const isLocked = document.getElementById('editLockBtn').classList.contains('text-red-500');
+
+            // Find selected color
+            let color = 'default';
+            const selectedColorBtn = document.querySelector('#colorPicker button.ring-2');
+            if (selectedColorBtn) color = selectedColorBtn.dataset.color;
+
+            if (!title && !content) {
+                showToast('내용을 입력해주세요.');
+                return;
+            }
+
+            if (currentEditingId) {
+                // Update
+                const memo = memos.find(m => m.id === currentEditingId);
+                if (memo) {
+                    memo.title = title || content.split('\n')[0].substring(0, 20);
+                    memo.content = content;
+                    memo.tag = tag;
+                    memo.fontFamily = fontFamily;
+                    memo.isPinned = isPinned;
+                    memo.isLocked = isLocked;
+                    memo.color = color;
+                    memo.hasImage = tempHasImage;
+                    memo.hasAudio = tempHasAudio;
+                    memo.updatedAt = new Date().toISOString();
+                }
+            } else {
+                // Create New
+                const newMemo = {
+                    id: 'memo-' + Date.now(),
+                    title: title || content.split('\n')[0].substring(0, 20),
+                    content: content,
+                    tag: tag,
+                    fontFamily: fontFamily,
+                    isPinned: isPinned,
+                    isLocked: isLocked,
+                    color: color,
+                    hasImage: tempHasImage,
+                    hasAudio: tempHasAudio,
+                    updatedAt: new Date().toISOString()
+                };
+                memos.unshift(newMemo);
+            }
+
+            saveMemosToStorage();
+            renderMemos();
+            closeEditor();
+            showToast('메모가 저장되었습니다.');
+        }
+
+        function deleteMemo(id) {
+            memos = memos.filter(m => m.id !== id);
+            saveMemosToStorage();
+            renderMemos();
+            showToast('메모가 삭제되었습니다.');
+        }
+
+        function togglePin(id) {
+            const memo = memos.find(m => m.id === id);
+            if (memo) {
+                memo.isPinned = !memo.isPinned;
+                saveMemosToStorage();
+                renderMemos();
+                showToast(memo.isPinned ? '상단에 고정되었습니다.' : '고정이 해제되었습니다.');
+            }
+        }
+
+        function updateAttachmentBadges() {
+            const container = document.getElementById('attachmentBadgeContainer');
+            container.innerHTML = '';
+            if (!tempHasImage && !tempHasAudio) {
+                container.innerHTML = `<span class="text-gray-400 italic">첨부된 파일이 없습니다.</span>`;
+                return;
+            }
+            if (tempHasImage) {
+                container.innerHTML += `<span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-lg flex items-center gap-1"><i class="fa-regular fa-image"></i> S26_Photo_01.jpg</span>`;
+            }
+            if (tempHasAudio) {
+                container.innerHTML += `<span class="px-2 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded-lg flex items-center gap-1"><i class="fa-solid fa-microphone"></i> Voice_Record_01.m4a</span>`;
+            }
+        }
+
+        function selectColorButton(colorName) {
+            document.querySelectorAll('#colorPicker button').forEach(b => {
+                b.classList.remove('ring-2', 'ring-offset-1', 'ring-blue-500');
+                if (b.dataset.color === colorName) {
+                    b.classList.add('ring-2', 'ring-offset-1', 'ring-blue-500');
+                }
+            });
+        }
+
+        function setToggleState(btn, state, activeClass) {
+            if (state) {
+                btn.classList.add(activeClass);
+                btn.classList.remove('text-gray-400');
+            } else {
+                btn.classList.remove(activeClass);
+                btn.classList.add('text-gray-400');
+            }
+        }
+
+        // SETTINGS MODAL
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            document.querySelectorAll('.line-opt-btn').forEach(b => {
+                if (b.dataset.lines === lineLimit) {
+                    b.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                } else {
+                    b.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                }
+            });
+            document.getElementById('globalFontSelect').value = globalFont;
+            updateSettingsUI();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function applySettings() {
+            const activeLineBtn = document.querySelector('.line-opt-btn.bg-blue-600');
+            if (activeLineBtn) lineLimit = activeLineBtn.dataset.lines;
+
+            globalFont = document.getElementById('globalFontSelect').value;
+
+            localStorage.setItem('notes26_lineLimit', lineLimit);
+            localStorage.setItem('notes26_globalFont', globalFont);
+
+            document.body.className = document.body.className.replace(/font-\S+/g, '') + ' ' + globalFont;
+
+            updateSettingsUI();
+            renderMemos();
+            closeSettingsModal();
+            showToast('설정이 적용되었습니다.');
+        }
+
+        function updateSettingsUI() {
+            const labelMap = { '1': '1줄', '2': '2줄', '3': '3줄', 'all': '전체' };
+            document.getElementById('currentSettingsSummary').textContent = `${labelMap[lineLimit] || '2줄'} 미리보기`;
+        }
+
+        // CLOUD BACKUP MODAL
+        function openCloudModal() {
+            const modal = document.getElementById('cloudModal');
+            document.getElementById('lastBackupTime').textContent = lastBackup;
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeCloudModal() {
+            const modal = document.getElementById('cloudModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function runManualBackup() {
+            if (!isAuth) {
+                showToast('구글 계정 연동이 필요합니다.');
+                return;
+            }
+            const now = new Date();
+            lastBackup = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            localStorage.setItem('notes26_lastBackup', lastBackup);
+            document.getElementById('lastBackupTime').textContent = lastBackup;
+
+            // Trigger actual JSON file download as backup artifact
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memos, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `NoteS26_Backup_${Date.now()}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+
+            showToast('구글 드라이브 백업 파일이 생성되었습니다.');
+        }
+
+        function runManualRestore() {
+            if (!isAuth) {
+                showToast('구글 계정 연동이 필요합니다.');
+                return;
+            }
+            // Restore simulation: reset/sync with default full sample data
+            memos = DEFAULT_MEMOS;
+            saveMemosToStorage();
+            renderMemos();
+            closeCloudModal();
+            showToast('백업 데이터 5개가 완벽히 복원되었습니다.');
+        }
+
+        function toggleAuthStatus() {
+            isAuth = !isAuth;
+            const btn = document.getElementById('toggleAuthBtn');
+            const email = document.getElementById('userEmail');
+            const avatar = document.getElementById('userAvatar');
+
+            if (isAuth) {
+                btn.textContent = '연동 해제';
+                email.textContent = 'user@gmail.com';
+                avatar.textContent = 'G';
+                avatar.className = 'w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm';
+                showToast('구글 계정이 연동되었습니다.');
+            } else {
+                btn.textContent = '로그인';
+                email.textContent = '연동 안 됨';
+                avatar.textContent = '?';
+                avatar.className = 'w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center font-bold text-sm';
+                showToast('구글 계정 연동이 해제되었습니다.');
+            }
+        }
+
+        // LOCK MODAL & BIOMETRIC SIMULATION
+        function openLockModal(memoId) {
+            pendingUnlockId = memoId;
+            const modal = document.getElementById('lockModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeLockModal() {
+            const modal = document.getElementById('lockModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+            pendingUnlockId = null;
+        }
+
+        function confirmUnlock() {
+            if (pendingUnlockId) {
+                const idToOpen = pendingUnlockId;
+                closeLockModal();
+                showToast('지문 인증이 완료되었습니다.');
+                setTimeout(() => openEditor(idToOpen), 200);
+            }
+        }
+
+        // UTILITY TOAST
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

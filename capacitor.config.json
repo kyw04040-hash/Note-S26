@@ -1,0 +1,8 @@
+{
+  "appId": "com.notes26.app",
+  "appName": "NoteS26",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}
